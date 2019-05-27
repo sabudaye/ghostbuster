@@ -1,13 +1,25 @@
 defmodule Ghostbuster.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+  @description "Set of useful functions to catch leaked processes in runtime"
+
   def project do
     [
       app: :ghostbuster,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.8",
-      start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      description: @description,
+      package: package(),
+      docs: [
+        extras: [
+          "README.md",
+        ],
+        main: "readme",
+        source_ref: "v#{@version}",
+        source_url: "https://github.com/sabudaye/ghostbuster"
+      ]
     ]
   end
 
@@ -19,5 +31,13 @@ defmodule Ghostbuster.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     []
+  end
+
+  defp package do
+    [
+      maintainers: ["Stanislav Budaev"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/elixir-ecto/postgrex"}
+    ]
   end
 end
