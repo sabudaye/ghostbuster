@@ -1,6 +1,6 @@
 # Ghostbuster
 
-Set of useful functions to catch leaked processes in runtime. Zero dependencies.
+Set of useful functions to catch leaked processes in runtime.
 
 ## Installation
 
