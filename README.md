@@ -14,10 +14,11 @@ end
 
 ## Usage
 
-### !!!WARNING!!! Check amount of processes on your production node!
-### this tool uses Process.list() and Enum, so IT CAN SIGNIFICANTLY SLOW DOWN YOUR APPLICATION
-### if you have a lot of processes, 10k of shouldn't create a problem
-### but if you have more - run it on your own risk.
+### !!!WARNING!!!
+Check amount of processes on your production node!
+this tool uses Process.list() and Enum, so IT CAN SIGNIFICANTLY SLOW DOWN YOUR APPLICATION
+if you have a lot of processes, 10k of shouldn't create a problem
+but if you have more - run it on your own risk.
 
 To get list of unlinked processes:
 ```elixir

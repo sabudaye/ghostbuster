@@ -9,7 +9,7 @@ defmodule Ghostbuster do
   @unlinked_info_keys [:links, :monitors]
 
   @doc """
-  `get_top_init_calls` returns sorted list of initial call functions with number of processes
+  `get_top_init_calls/0` returns sorted list of initial call functions with number of processes
 
   ## Example:
 
@@ -25,14 +25,36 @@ defmodule Ghostbuster do
   @spec get_top_init_calls() :: list()
   def get_top_init_calls do
     Process.list()
+    |> get_top_init_calls()
+  end
+
+  @doc """
+  `get_top_init_calls/1` returns sorted list of initial call functions with number of processes
+  for given list of processes
+
+  ## Example:
+
+    iex> Ghostbuster.get_top_init_calls(Process.list())
+    [
+      {{:application_master, :init, 4}, 5},
+      {{:application_master, :start_it, 4}, 5},
+      {{:supervisor, Supervisor.Default, 1}, 4},
+      {{:gen_event, :init_it, 6}, 3},
+      {{:erts_dirty_process_signal_handler, :start, 0}, 3}
+    ]
+  """
+  @spec get_top_init_calls(list(pid)) :: list()
+  def get_top_init_calls(process_list) do
+    process_list
     |> Enum.map(&get_info(&1, @initial_call_info_keys))
+    |> Enum.filter(&is_alive?/1)
     |> Enum.reduce(%{}, &count_initial_calls/2)
     |> Enum.sort(fn {_k1, c1}, {_k2, c2} -> c1 > c2 end)
     |> Enum.take(5)
   end
 
   @doc """
-  `get_pids_by_init_call` returns list of pids by given {module, function, args} tuple
+  `get_pids_by_init_call/1` returns list of pids by given {module, function, args} tuple
 
   ## Example:
 
@@ -42,13 +64,29 @@ defmodule Ghostbuster do
   @spec get_pids_by_init_call({atom, atom, integer}) :: list(pid)
   def get_pids_by_init_call(function) do
     Process.list()
+    |> get_pids_by_init_call(function)
+  end
+
+  @doc """
+  `get_pids_by_init_call/2` returns list of pids by given {module, function, args} tuple
+  for given list of processes
+
+  ## Example:
+
+    iex> Ghostbuster.get_pids_by_init_call(Process.list(), {:application_master, :init, 4})
+    [:erlang.list_to_pid('<0.45.0>')]
+  """
+  @spec get_pids_by_init_call(list(pid), {atom, atom, integer}) :: list(pid)
+  def get_pids_by_init_call(process_list, function) do
+    process_list
     |> Enum.map(&get_info(&1, @initial_call_info_keys))
+    |> Enum.filter(&is_alive?/1)
     |> Enum.filter(&initial_call_eq?(&1, function))
     |> Enum.map(& &1[:pid])
   end
 
   @doc """
-  `get_unlinked_pids` returns list of pids which don't have links or monitors
+  `get_unlinked_pids/0` returns list of pids which don't have links or monitors
 
   ## Example:
 
@@ -58,13 +96,29 @@ defmodule Ghostbuster do
   @spec get_unlinked_pids() :: list(pid)
   def get_unlinked_pids do
     Process.list()
+    |> get_unlinked_pids()
+  end
+
+  @doc """
+  `get_unlinked_pids/1` returns list of pids which don't have links or monitors
+  for given list of processes
+
+  ## Example:
+
+    iex> Ghostbuster.get_unlinked_pids(Process.list())
+    [:erlang.list_to_pid('<0.45.0>')]
+  """
+  @spec get_unlinked_pids(list(pid)) :: list(pid)
+  def get_unlinked_pids(process_list) do
+    process_list
     |> Enum.map(&get_info(&1, @unlinked_info_keys))
+    |> Enum.filter(&is_alive?/1)
     |> Enum.filter(&no_links?/1)
     |> Enum.map(& &1[:pid])
   end
 
   @doc """
-  `get_init_call` returns {module, function, args} tuple for given pid
+  `get_init_call/1` returns {module, function, args} tuple for given pid
 
   ## Example:
 
@@ -81,8 +135,16 @@ defmodule Ghostbuster do
   defp get_info(pid, keys) do
     pid
     |> Process.info(keys)
+    # in case if process died before the info request Proces.info/2 would return nil value
+    # and this can happen because there is short time gap between calling Process.list/0 and Process.info/2
+    # so for that reason we don't want to break the whole pipeline with error, instead we can set
+    # default key "died" and filter those processes later
+    |> Kernel.||(died: true)
     |> put_in([:pid], pid)
   end
+
+  defp is_alive?(pid: _, died: true), do: false
+  defp is_alive?(_), do: true
 
   defp count_initial_calls(info, acc) do
     ic = get_initial_call(info)

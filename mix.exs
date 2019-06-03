@@ -1,7 +1,7 @@
 defmodule Ghostbuster.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.1.1"
   @description "Set of useful functions to catch leaked processes in runtime"
 
   def project do
@@ -14,7 +14,7 @@ defmodule Ghostbuster.MixProject do
       package: package(),
       docs: [
         extras: [
-          "README.md",
+          "README.md"
         ],
         main: "readme",
         source_ref: "v#{@version}",
